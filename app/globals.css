@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --obsidian: #080B10;
+  --deep-pressure: #101722;
+  --instrument-slate: #182231;
+  --fog-surface: #DDE4EA;
+  --cold-white: #F5F8FA;
+
+  --stable-cyan: #42D6C6;
+  --strengthening-blue: #5D8CFF;
+  --strained-amber: #E6A84A;
+  --eroding-vermilion: #F06A4F;
+  --fragile-magenta: #D35CFF;
+  --critical-red: #FF3B4E;
+  --inconclusive-grey: #82909D;
+
+  --evidence-green: #6FE3A1;
+  --challenge-gold: #F3C969;
+  --consensus-violet: #8B7CFF;
+
+  --background: var(--obsidian);
+  --foreground: var(--fog-surface);
+  --surface: var(--deep-pressure);
+  --surface-raised: var(--instrument-slate);
+  --text-muted: #6B7A8D;
+  --border: #1E2D3D;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+
+  --color-stable: var(--stable-cyan);
+  --color-strengthening: var(--strengthening-blue);
+  --color-strained: var(--strained-amber);
+  --color-eroding: var(--eroding-vermilion);
+  --color-fragile: var(--fragile-magenta);
+  --color-critical: var(--critical-red);
+  --color-inconclusive: var(--inconclusive-grey);
+  --color-evidence: var(--evidence-green);
+  --color-challenge: var(--challenge-gold);
+  --color-consensus: var(--consensus-violet);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+  --font-display: var(--font-instrument-serif), Georgia, serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-data {
+  font-family: var(--font-mono);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(30, 45, 61, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 45, 61, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.clip-corner {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.instrument-band {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
