@@ -173,7 +173,7 @@ export default function ManageCommunityPage() {
           </p>
         </Link>
         <Link
-          href={`/climates/${community.slug}`}
+          href={`/community/${communityId}`}
           className="instrument-band p-5 hover:border-stable/40 transition-colors group"
         >
           <p className="text-xs uppercase tracking-[0.15em] text-muted mb-1">Public Profile</p>
