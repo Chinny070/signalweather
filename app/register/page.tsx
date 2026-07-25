@@ -7,7 +7,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useWallet } from '@/components/wallet/WalletProvider';
 import { TransactionStatus, type TxPhase } from '@/components/tx/TransactionStatus';
-import { registerCommunity } from '@/lib/contract';
+import { registerCommunity, getCounts } from '@/lib/contract';
 
 const DEFAULT_POSTURE_POLICY = JSON.stringify({
   stable: 'normal',
@@ -65,7 +65,8 @@ export default function RegisterPage() {
 
       if (outcome.success) {
         setTxPhase('accepted');
-        setCreatedId(outcome.hash);
+        const counts = await getCounts();
+        setCreatedId(String(counts.communities));
       } else {
         setTxPhase('error');
         setTxError(outcome.error ?? 'Transaction failed');
