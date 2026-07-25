@@ -657,39 +657,51 @@ class SignalWeatherRegistry(gl.Contract):
                 return False
             if leader.get("evidence_coverage_band") not in VALID_COVERAGE_BANDS:
                 return False
+            if leader.get("confidence", -1) < 0 or leader.get("confidence", 101) > 100:
+                return False
+
+            for dk in DIMENSION_KEYS:
+                dv = leader.get("dimensions", {}).get(dk, "")
+                if dv not in DIMENSION_STATES.get(dk, []):
+                    return False
+
+            if not isinstance(leader.get("supporting_findings"), list):
+                return False
+            if not isinstance(leader.get("short_reason"), str) or len(leader["short_reason"]) < 10:
+                return False
 
             own = leader_fn()
 
             if leader["climate"] != own["climate"]:
-                return False
-            if leader["direction"] != own["direction"]:
-                return False
+                climate_dist = abs(
+                    VALID_CLIMATES.index(leader["climate"]) - VALID_CLIMATES.index(own["climate"])
+                )
+                if climate_dist > 1:
+                    return False
+
             if leader["evidence_coverage_band"] != own["evidence_coverage_band"]:
-                return False
+                cov_dist = abs(
+                    VALID_COVERAGE_BANDS.index(leader["evidence_coverage_band"])
+                    - VALID_COVERAGE_BANDS.index(own["evidence_coverage_band"])
+                )
+                if cov_dist > 1:
+                    return False
 
             dimension_mismatches = 0
             for dk in DIMENSION_KEYS:
                 ld = leader.get("dimensions", {}).get(dk, "unknown")
                 od = own.get("dimensions", {}).get(dk, "unknown")
                 dist = _dimension_distance(ld, od, dk)
-                if dist > ALLOWED_DIMENSION_DISTANCE:
+                if dist > 2:
                     return False
                 if dist > 0:
                     dimension_mismatches += 1
 
-            if dimension_mismatches > 2:
+            if dimension_mismatches > 4:
                 return False
 
-            if abs(leader.get("confidence", 0) - own.get("confidence", 0)) > CONFIDENCE_TOLERANCE:
+            if abs(leader.get("confidence", 0) - own.get("confidence", 0)) > 25:
                 return False
-
-            leader_flags = set(leader.get("material_risk_flags", []))
-            own_flags = set(own.get("material_risk_flags", []))
-            if len(leader_flags) > 0 or len(own_flags) > 0:
-                intersection = leader_flags & own_flags
-                union = leader_flags | own_flags
-                if len(union) > 0 and len(intersection) / len(union) < 0.3:
-                    return False
 
             return True
 
@@ -919,14 +931,21 @@ You must determine if the new evidence or identified error materially changes th
 
             if leader.get("climate") not in VALID_CLIMATES:
                 return False
+            if leader.get("direction") not in VALID_DIRECTIONS:
+                return False
+            if leader.get("evidence_coverage_band") not in VALID_COVERAGE_BANDS:
+                return False
 
             own = leader_fn()
 
             if leader["climate"] != own["climate"]:
-                return False
-            if leader["direction"] != own["direction"]:
-                return False
-            if abs(leader.get("confidence", 0) - own.get("confidence", 0)) > CONFIDENCE_TOLERANCE:
+                climate_dist = abs(
+                    VALID_CLIMATES.index(leader["climate"]) - VALID_CLIMATES.index(own["climate"])
+                )
+                if climate_dist > 1:
+                    return False
+
+            if abs(leader.get("confidence", 0) - own.get("confidence", 0)) > 25:
                 return False
 
             return True
