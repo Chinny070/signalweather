@@ -208,7 +208,7 @@ export default function ManageCommunityPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-sm font-medium text-foreground">{epoch.label}</span>
+                    <Link href={`/community/${communityId}/epoch/${epoch.id}`} className="text-sm font-medium text-foreground hover:text-stable transition-colors hover:underline">{epoch.label}</Link>
                     <span className="text-xs font-data uppercase tracking-wider text-muted">
                       {epoch.status.replace(/_/g, ' ')}
                     </span>
