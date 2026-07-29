@@ -12,6 +12,7 @@ import { ClimateBadge } from '@/components/climate/ClimateBadge';
 import { PostureBadge } from '@/components/climate/PostureBadge';
 import {
   getCommunity, getEpoch, getEpochVerdict, openChallenge,
+  requestReassessment, getCounts,
 } from '@/lib/contract';
 import { DIMENSION_LABELS, DIRECTION_LABELS, COVERAGE_LABELS } from '@/lib/formatting/climate';
 import type { Community, Epoch, Verdict, ChallengeBasis, DimensionKey } from '@/lib/genlayer/types';
@@ -46,7 +47,7 @@ const schema = z.object({
   materialityStatement: z
     .string()
     .min(20, 'Materiality statement must be at least 20 characters')
-    .max(2000, 'Materiality statement must be 2000 characters or fewer'),
+    .max(1000, 'Materiality statement must be 1000 characters or fewer'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -66,6 +67,12 @@ export default function ChallengePage() {
   const [txPhase, setTxPhase] = useState<TxPhase | null>(null);
   const [txHash, setTxHash] = useState<string | undefined>();
   const [txError, setTxError] = useState<string | undefined>();
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+
+  // Reassessment tx
+  const [reassessPhase, setReassessPhase] = useState<TxPhase | null>(null);
+  const [reassessHash, setReassessHash] = useState<string | undefined>();
+  const [reassessError, setReassessError] = useState<string | undefined>();
 
   const {
     register,
@@ -127,6 +134,8 @@ export default function ChallengePage() {
 
       if (outcome.success) {
         setTxPhase('accepted');
+        const counts = await getCounts();
+        setChallengeId(String(counts.challenges));
       } else {
         setTxPhase('error');
         setTxError(outcome.error ?? 'Transaction failed');
@@ -413,17 +422,64 @@ export default function ChallengePage() {
               </div>
             )}
 
-            {txPhase === 'accepted' && (
+            {txPhase === 'accepted' && challengeId && (
               <div className="mt-4 instrument-band p-4 border-stable/30">
-                <p className="text-sm text-stable mb-2">
-                  Challenge submitted successfully.
+                <p className="text-sm text-stable mb-3">
+                  Challenge #{challengeId} submitted successfully. Request a reassessment to have validators re-evaluate with the new evidence.
                 </p>
-                <Link
-                  href={`/manage/${communityId}`}
-                  className="text-xs uppercase tracking-widest text-stable hover:underline font-data"
+
+                <button
+                  onClick={async () => {
+                    setReassessPhase('preparing');
+                    setReassessHash(undefined);
+                    setReassessError(undefined);
+                    try {
+                      setReassessPhase('wallet_confirm');
+                      const outcome = await requestReassessment(challengeId);
+                      setReassessHash(outcome.hash);
+                      if (outcome.success) {
+                        setReassessPhase('accepted');
+                      } else {
+                        setReassessPhase('error');
+                        setReassessError(outcome.error ?? 'Reassessment failed');
+                      }
+                    } catch (err) {
+                      setReassessPhase('error');
+                      setReassessError(err instanceof Error ? err.message : 'Unknown error');
+                    }
+                  }}
+                  disabled={reassessPhase === 'wallet_confirm' || reassessPhase === 'submitted' || reassessPhase === 'pending_consensus' || reassessPhase === 'accepted'}
+                  className="bg-consensus text-background px-6 py-3 text-xs uppercase tracking-widest font-medium clip-corner hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Return to Dashboard →
-                </Link>
+                  {reassessPhase === 'accepted' ? 'Reassessment Complete' : 'Request Reassessment'}
+                </button>
+
+                {reassessPhase && (
+                  <div className="mt-3">
+                    <TransactionStatus phase={reassessPhase} hash={reassessHash} error={reassessError} />
+                  </div>
+                )}
+
+                {reassessPhase === 'accepted' && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-sm text-stable mb-2">Reassessment complete. Validators have re-evaluated the evidence.</p>
+                    <Link
+                      href={`/community/${communityId}/epoch/${epochId}`}
+                      className="text-xs uppercase tracking-widest text-stable hover:underline font-data"
+                    >
+                      View Updated Verdict →
+                    </Link>
+                  </div>
+                )}
+
+                {!reassessPhase && (
+                  <Link
+                    href={`/manage/${communityId}`}
+                    className="mt-3 inline-block text-xs uppercase tracking-widest text-muted hover:text-foreground transition-colors font-data"
+                  >
+                    Return to Dashboard →
+                  </Link>
+                )}
               </div>
             )}
           </form>
