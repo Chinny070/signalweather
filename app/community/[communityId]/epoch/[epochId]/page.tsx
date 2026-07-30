@@ -2,7 +2,9 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getEpoch, getEpochVerdict, getCommunity, getSourceSet, getSource } from '@/lib/contract';
+import { getEpoch, getEpochVerdict, getCommunity, getSourceSet, getSource, requestAssessment } from '@/lib/contract';
+import { useWallet } from '@/components/wallet/WalletProvider';
+import { TransactionStatus, type TxPhase } from '@/components/tx/TransactionStatus';
 import type { Epoch, Verdict, Community, Source, Climate, Posture, Direction, DimensionKey } from '@/lib/genlayer/types';
 import { ClimateField } from '@/components/climate/ClimateField';
 import { TrustCrossSection } from '@/components/climate/TrustCrossSection';
@@ -12,11 +14,15 @@ import { formatEpochWindow } from '@/lib/formatting/climate';
 
 export default function EpochPage({ params }: { params: Promise<{ communityId: string; epochId: string }> }) {
   const { communityId, epochId } = use(params);
+  const { address } = useWallet();
   const [epoch, setEpoch] = useState<Epoch | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
+  const [assessPhase, setAssessPhase] = useState<TxPhase | null>(null);
+  const [assessHash, setAssessHash] = useState<string | undefined>();
+  const [assessError, setAssessError] = useState<string | undefined>();
 
   useEffect(() => {
     async function load() {
@@ -145,10 +151,49 @@ export default function EpochPage({ params }: { params: Promise<{ communityId: s
           </div>
         </>
       ) : (
-        <div className="instrument-band p-8 text-center text-muted">
-          {epoch.status === 'collecting' ? 'Epoch is collecting. Assessment not yet requested.' :
-           epoch.status === 'assessment_pending' ? 'Assessment pending consensus...' :
-           'No verdict available.'}
+        <div className="instrument-band p-8 text-center">
+          <p className="text-muted mb-4">
+            {epoch.status === 'collecting' ? 'Epoch is collecting. Assessment not yet requested.' :
+             epoch.status === 'assessment_pending' ? 'Assessment pending consensus...' :
+             'No verdict available.'}
+          </p>
+          {epoch.status === 'collecting' && address && community && (
+            <>
+              <button
+                onClick={async () => {
+                  setAssessPhase('preparing');
+                  setAssessHash(undefined);
+                  setAssessError(undefined);
+                  try {
+                    setAssessPhase('wallet_confirm');
+                    const outcome = await requestAssessment(epochId);
+                    setAssessHash(outcome.hash);
+                    if (outcome.success) {
+                      setAssessPhase('accepted');
+                      setEpoch({ ...epoch, status: 'accepted' });
+                      const v = await getEpochVerdict(epochId);
+                      setVerdict(v);
+                    } else {
+                      setAssessPhase('error');
+                      setAssessError(outcome.error ?? 'Assessment failed');
+                    }
+                  } catch (err) {
+                    setAssessPhase('error');
+                    setAssessError(err instanceof Error ? err.message : 'Unknown error');
+                  }
+                }}
+                disabled={assessPhase === 'wallet_confirm' || assessPhase === 'submitted' || assessPhase === 'pending_consensus'}
+                className="bg-consensus text-background px-6 py-3 text-xs uppercase tracking-widest font-medium clip-corner hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Request Assessment
+              </button>
+              {assessPhase && (
+                <div className="mt-4 max-w-md mx-auto">
+                  <TransactionStatus phase={assessPhase} hash={assessHash} error={assessError} />
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
