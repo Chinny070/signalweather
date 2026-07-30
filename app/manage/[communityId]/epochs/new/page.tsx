@@ -135,6 +135,8 @@ export default function NewEpochPage() {
       if (outcome.success) {
         setAssessTxPhase('accepted');
         loadData();
+      } else if (outcome.pending) {
+        setAssessTxPhase('pending_long');
       } else {
         setAssessTxPhase('error');
         setAssessTxError(outcome.error ?? 'Transaction failed');

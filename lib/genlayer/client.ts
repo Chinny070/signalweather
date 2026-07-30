@@ -134,13 +134,14 @@ export async function callReadMethod(
 }
 
 export async function waitForReceipt(
-  txHash: string
-): Promise<{ status: 'success' | 'error'; data?: unknown }> {
+  txHash: string,
+  retries = 200,
+): Promise<{ status: 'success' | 'error' | 'pending'; data?: unknown }> {
   try {
     const client = getReadClient();
     const receipt = await client.waitForTransactionReceipt({
       hash: txHash as `0x${string}` & { length: 66 },
-      retries: 200,
+      retries,
     });
     const status = receipt.status || receipt.statusName;
     if (status === 'ACCEPTED' || status === 'FINALIZED') {
@@ -151,7 +152,7 @@ export async function waitForReceipt(
     }
     return { status: 'success', data: receipt };
   } catch {
-    return { status: 'error' };
+    return { status: 'pending' };
   }
 }
 

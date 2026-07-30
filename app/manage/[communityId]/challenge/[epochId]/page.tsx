@@ -439,6 +439,8 @@ export default function ChallengePage() {
                       setReassessHash(outcome.hash);
                       if (outcome.success) {
                         setReassessPhase('accepted');
+                      } else if (outcome.pending) {
+                        setReassessPhase('pending_long');
                       } else {
                         setReassessPhase('error');
                         setReassessError(outcome.error ?? 'Reassessment failed');
@@ -448,7 +450,7 @@ export default function ChallengePage() {
                       setReassessError(err instanceof Error ? err.message : 'Unknown error');
                     }
                   }}
-                  disabled={reassessPhase === 'wallet_confirm' || reassessPhase === 'submitted' || reassessPhase === 'pending_consensus' || reassessPhase === 'accepted'}
+                  disabled={reassessPhase === 'wallet_confirm' || reassessPhase === 'submitted' || reassessPhase === 'pending_consensus' || reassessPhase === 'accepted' || reassessPhase === 'pending_long'}
                   className="bg-consensus text-background px-6 py-3 text-xs uppercase tracking-widest font-medium clip-corner hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {reassessPhase === 'accepted' ? 'Reassessment Complete' : 'Request Reassessment'}

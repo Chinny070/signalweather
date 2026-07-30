@@ -76,15 +76,22 @@ export async function getCommunitySourceIds(communityId: string): Promise<number
 export interface TxOutcome {
   hash: string;
   success: boolean;
+  pending?: boolean;
   error?: string;
 }
+
+const LONG_POLL_METHODS = ['request_assessment', 'request_reassessment'];
 
 async function executeWrite(method: string, args: string[]): Promise<TxOutcome> {
   const txResult: TxResult = await sendTransaction(method, args);
   if (txResult.status === 'error') {
     return { hash: '', success: false, error: txResult.error };
   }
-  const receipt = await waitForReceipt(txResult.hash);
+  const retries = LONG_POLL_METHODS.includes(method) ? 600 : 200;
+  const receipt = await waitForReceipt(txResult.hash, retries);
+  if (receipt.status === 'pending') {
+    return { hash: txResult.hash, success: false, pending: true };
+  }
   return {
     hash: txResult.hash,
     success: receipt.status === 'success',

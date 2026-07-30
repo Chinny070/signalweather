@@ -2,7 +2,7 @@
 
 import { explorerTxUrl } from '@/lib/genlayer/network';
 
-export type TxPhase = 'preparing' | 'wallet_confirm' | 'submitted' | 'pending_consensus' | 'accepted' | 'undetermined' | 'error';
+export type TxPhase = 'preparing' | 'wallet_confirm' | 'submitted' | 'pending_consensus' | 'accepted' | 'undetermined' | 'pending_long' | 'error';
 
 const PHASE_LABELS: Record<TxPhase, string> = {
   preparing: 'Preparing transaction...',
@@ -11,6 +11,7 @@ const PHASE_LABELS: Record<TxPhase, string> = {
   pending_consensus: 'Pending consensus...',
   accepted: 'Accepted',
   undetermined: 'Undetermined',
+  pending_long: 'Assessment in progress — validators are fetching sources and evaluating. This may take a few minutes.',
   error: 'Transaction failed',
 };
 
@@ -21,7 +22,7 @@ interface TransactionStatusProps {
 }
 
 export function TransactionStatus({ phase, hash, error }: TransactionStatusProps) {
-  const isActive = ['preparing', 'wallet_confirm', 'submitted', 'pending_consensus'].includes(phase);
+  const isActive = ['preparing', 'wallet_confirm', 'submitted', 'pending_consensus', 'pending_long'].includes(phase);
   const isSuccess = phase === 'accepted';
   const isError = phase === 'error' || phase === 'undetermined';
 

@@ -173,6 +173,8 @@ export default function EpochPage({ params }: { params: Promise<{ communityId: s
                       setEpoch({ ...epoch, status: 'accepted' });
                       const v = await getEpochVerdict(epochId);
                       setVerdict(v);
+                    } else if (outcome.pending) {
+                      setAssessPhase('pending_long');
                     } else {
                       setAssessPhase('error');
                       setAssessError(outcome.error ?? 'Assessment failed');
