@@ -118,7 +118,7 @@ export default function EpochPage({ params }: { params: Promise<{ communityId: s
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted">Confidence</span>
-                    <span className="font-data">{verdict.confidence}%</span>
+                    <span className="font-data">{Math.round(verdict.confidence > 1 ? verdict.confidence : verdict.confidence * 100)}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Coverage</span>

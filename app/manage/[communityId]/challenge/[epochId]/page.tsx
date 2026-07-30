@@ -254,11 +254,11 @@ export default function ChallengePage() {
               <div className="flex-1 h-1.5 bg-surface-raised rounded-full overflow-hidden">
                 <div
                   className="h-full bg-consensus rounded-full"
-                  style={{ width: `${Math.round(verdict.confidence * 100)}%` }}
+                  style={{ width: `${Math.min(Math.round(verdict.confidence > 1 ? verdict.confidence : verdict.confidence * 100), 100)}%` }}
                 />
               </div>
               <span className="text-xs font-data text-foreground">
-                {Math.round(verdict.confidence * 100)}%
+                {Math.round(verdict.confidence > 1 ? verdict.confidence : verdict.confidence * 100)}%
               </span>
             </div>
           </div>
